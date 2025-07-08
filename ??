@@ -1,0 +1,84 @@
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <io.h>
+
+bool containsWord(const char* filepath, const char* word)
+{
+    FILE* file = fopen(filepath, "r");
+    if (!file)
+    {
+        return false;
+    }
+
+    char buffer[1023];
+    while (fscanf(file, "%1023s", buffer) == 1)
+    {
+        if (strstr(buffer, word) != nullptr)
+        {
+            fclose(file);
+            return true;
+        }
+    }
+
+    fclose(file);
+    return false;
+}
+
+int main()
+{
+    char path[260];
+    char mask[100];
+    char word[100];
+
+    std::cout << "Enter the directory path (without spaces): ";
+    std::cin >> path;
+
+    std::cout << "Enter the mask (e.g. *.txt): ";
+    std::cin >> mask;
+
+    std::cout << "Enter a search term (no spaces): ";
+    std::cin >> word;
+
+    char search_path[370];
+    size_t path_len = strlen(path);
+
+    if (path[path_len - 1] != '\\' && path[path_len - 1] != '/')
+    {
+        snprintf(search_path, sizeof(search_path), "%s\\%s", path, mask);
+    }
+    else
+    {
+        snprintf(search_path, sizeof(search_path), "%s%s", path, mask);
+    }
+
+    struct _finddata_t fileinfo;
+    intptr_t handle = _findfirst(search_path, &fileinfo);
+    if (handle == -1)
+    {
+        std::cerr << "Files not found or search error.\n";
+        return 1;
+    }
+
+    do
+    {
+        char fullpath[370];
+        if (path[path_len - 1] != '\\' && path[path_len - 1] != '/')
+        {
+            snprintf(fullpath, sizeof(fullpath), "%s\\%s", path, fileinfo.name);
+        }
+        else
+        {
+            snprintf(fullpath, sizeof(fullpath), "%s%s", path, fileinfo.name);
+        }
+
+        if (containsWord(fullpath, word))
+        {
+            std::cout << "Found: " << fullpath << std::endl;
+        }
+
+    } while (_findnext(handle, &fileinfo) == 0);
+
+    _findclose(handle);
+    return 0;
+}
